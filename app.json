@@ -1,17 +1,26 @@
 {
   "expo": {
-    "name": "DictionaryMobileApp",
-    "slug": "DictionaryMobileApp",
+    "name": "LexiTech",
+    "slug": "lexitech",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "backgroundColor": "#FCF9F8",
+    "primaryColor": "#007AFF",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FCF9F8"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lexitech.dictionary"
     },
     "android": {
+      "package": "com.lexitech.dictionary",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#E6F1FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"

@@ -51,7 +51,9 @@ export default function AudioPlayer({ audio }) {
   const pan = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
+      // Only claim horizontal drags so vertical page scrolling still works
+      // when a gesture begins on the (thin) progress bar.
+      onMoveShouldSetPanResponder: (e, g) => Math.abs(g.dx) > Math.abs(g.dy),
       onPanResponderGrant: (e) => seekRef.current(e.nativeEvent.locationX),
       onPanResponderMove: (e) => seekRef.current(e.nativeEvent.locationX),
     })

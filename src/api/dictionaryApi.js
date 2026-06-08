@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { isOnline } from '../utils/network';
 
 // Free Dictionary API — https://dictionaryapi.dev
 const BASE_URL = 'https://api.dictionaryapi.dev/api/v2/entries/en';
@@ -103,6 +104,15 @@ export async function getWordData(rawWord) {
   const word = String(rawWord ?? '').trim().toLowerCase();
   if (!word) {
     throw new DictionaryError(ErrorType.EMPTY, 'Please enter a word to search.');
+  }
+
+  // Proactively detect an offline device for a clearer message. Falls back to
+  // the reactive network handling below when connectivity can't be determined.
+  if (!(await isOnline())) {
+    throw new DictionaryError(
+      ErrorType.NETWORK,
+      'You appear to be offline. Please check your internet connection and try again.'
+    );
   }
 
   try {

@@ -2,107 +2,44 @@
 
 A cross-platform (Android + iOS) dictionary app built with **React Native + Expo**.
 Search English words and view definitions, parts of speech, examples, synonyms/antonyms,
-and listen to pronunciations — powered by the [Free Dictionary API](https://dictionaryapi.dev).
+listen to pronunciations, and keep a local history and bookmarks — powered by the
+[Free Dictionary API](https://dictionaryapi.dev).
 
-> **Authentication:** Intentionally **not** included. None of the required features need an
-> account (history and bookmarks are stored locally), so auth was deferred. The app is
-> structured so a login/signup module can be added later without rework.
+> **Design docs (DFD, architecture, endpoints, pages):** see [DESIGN.md](DESIGN.md).
+>
+> **Authentication** is intentionally **not** included — no required feature needs an
+> account (history and bookmarks are stored locally). It can be added later as a module.
+
+---
+
+## Features
+
+- 🔎 **Search** with input validation and **history-backed suggestions** (recent + matches).
+- 📖 **Word detail**: prominent word, phonetics, every part of speech, all definitions,
+  examples, and synonym/antonym chips. Handles multiple meanings & long text.
+- 🔊 **Pronunciation player**: play / pause / **stop** + a **seekable progress bar** with
+  time, an inline speaker by the phonetics, and accent switching (US/UK) when available.
+- 🕘 **History** & 🔖 **Saved** tabs — each row shows a short description; tap to re-open,
+  swipe-free remove, or clear all. Both **persist across restarts** (AsyncStorage).
+- 🧭 **Drawer + bottom tabs** (Search · History · Saved) with an active-tab highlight.
+- ⚠️ **Robust errors**: word-not-found, offline (proactive + reactive), timeout, server,
+  and malformed responses — all friendly states with retry; never crashes.
 
 ---
 
 ## Tech stack
 
-| Concern         | Choice                                              |
-| --------------- | --------------------------------------------------- |
-| Framework       | React Native (Expo SDK 56)                          |
-| HTTP client     | **axios**                                           |
-| Navigation      | React Navigation — Drawer + Bottom Tabs + Native Stack |
-| Audio           | `expo-audio`                                        |
-| Icons           | `@expo/vector-icons` (Material Icons)               |
-| State           | React Context (`HistoryContext`, `BookmarksContext`)|
-| Design system   | LexiTech tokens in `src/theme` (`#007aff`, Inter scale) |
-| Testing / dev   | Expo CLI (`npx expo start`)                         |
-
----
-
-## Architecture
-
-```
-App.js
-  GestureHandlerRootView › SafeAreaProvider › HistoryProvider › BookmarksProvider
-        │
-   AppNavigator
-   └── Drawer.Navigator (custom DrawerContent = search history + clear)
-         └── Bottom Tabs
-               ├── Search  ─ Stack( SearchHome → WordDetail )
-               ├── History ─ Stack( HistoryHome → WordDetail )
-               └── Saved   ─ Stack( SavedHome → WordDetail )
-```
-
-- **WordDetail is registered in every tab's stack**, so the bottom bar stays visible on
-  the detail screen and any entry point (search, history, saved, drawer) reuses it.
-- **The detail screen owns the fetch.** Search/History/Saved/Drawer all just
-  `navigate('WordDetail', { word })`; the detail screen handles loading, errors, retry,
-  records history, and exposes the bookmark toggle. One code path, many entry points.
-
-**Layers**
-
-- `api/` — axios + normalization. `getWordData(word)` resolves to a normalized object or
-  throws a typed `DictionaryError`.
-- `utils/` — pure input validation.
-- `context/` — search history and bookmarks (dedupe, most-recent-first).
-- `hooks/useWordAudio.js` — owns one audio player; picks a preferred accent, plays any.
-- `screens/` — orchestration (loading / error / success).
-- `components/` — reusable presentational UI.
-- `theme/` — design tokens (colors, spacing, radii, typography, shadows).
-
----
-
-## Data flow (search)
-
-1. User types a word → `SearchScreen` → `validateSearchTerm()` (non-empty, letters only).
-2. Navigate to `WordDetail` with `{ word }`.
-3. Detail shows a loading indicator and calls **axios GET**
-   `https://api.dictionaryapi.dev/api/v2/entries/en/{word}`.
-4. Response is **normalized** to `{ word, phoneticText, audios[], meanings[], sourceUrls[] }`.
-5. Word is added to history; the screen renders the hero + meaning cards.
-6. On failure, a typed error maps to a friendly message + **Try again**.
-
-## API
-
-| Method | Endpoint                                                  | Purpose             |
-| ------ | -------------------------------------------------------- | ------------------- |
-| GET    | `https://api.dictionaryapi.dev/api/v2/entries/en/{word}` | Look up a word      |
-
-Handled: `200`, `404` (not found), network errors, timeouts, server errors, malformed payloads.
-
----
-
-## Screens
-
-| Screen          | Activity | Responsibilities                                                      |
-| --------------- | -------- | -------------------------------------------------------------------- |
-| **Search**      | 1, 5     | Brand, validated input, navigate to detail                           |
-| **Word Detail** | 1, 2, 3, 5 | Fetch + loading + errors + retry; word, phonetics, meanings, examples, synonyms/antonyms, audio, bookmark toggle |
-| **History**     | 4        | Tab list of searched words; tap to re-open; remove / clear all       |
-| **Saved**       | —        | Tab list of bookmarked words; tap to open; remove / clear all        |
-| **Drawer**      | 4        | Brand, search-history list, clear history                            |
-
-## Validation
-
-- Search field cannot be empty; must start with a letter; letters/space/hyphen/apostrophe only; max 50 chars.
-- Invalid input shows an inline message and never hits the network.
-
-## Error handling
-
-| Situation            | Behavior                                                  |
-| -------------------- | --------------------------------------------------------- |
-| Word not found (404) | "Word not found" state with **Try again**                 |
-| No network / timeout | Friendly message with **Try again**                       |
-| Server error (5xx)   | "Service unavailable" with **Try again**                  |
-| Malformed response   | Guarded parsing — app never crashes                       |
-| Audio playback fails | Inline banner; the rest of the screen keeps working       |
-| No audio available   | Pronunciation button is hidden                            |
+| Concern         | Choice                                                  |
+| --------------- | ------------------------------------------------------- |
+| Framework       | React Native (Expo SDK 56)                              |
+| HTTP client     | **axios**                                               |
+| Navigation      | React Navigation — Drawer + Bottom Tabs + Native Stack  |
+| Audio           | `expo-audio`                                            |
+| Icons           | `@expo/vector-icons` (Ionicons)                         |
+| Connectivity    | `@react-native-community/netinfo`                       |
+| Persistence     | `@react-native-async-storage/async-storage`            |
+| State           | React Context (`HistoryContext`, `BookmarksContext`)    |
+| Testing / dev   | Expo CLI (`npx expo start`)                             |
 
 ---
 
@@ -111,13 +48,18 @@ Handled: `200`, `404` (not found), network errors, timeouts, server errors, malf
 ```
 App.js                      Providers + gesture root
 index.js                    Entry (imports react-native-gesture-handler first)
+app.json                    Expo config (name/icon/splash = LexiTech brand)
 src/
   api/dictionaryApi.js      axios client, getWordData(), normalize, DictionaryError
-  utils/validation.js       Input validation + capitalize
+  utils/
+    validation.js           Input validation + capitalize
+    network.js              isOnline() connectivity check (NetInfo, optional)
   context/
-    HistoryContext.js       Search history
-    BookmarksContext.js     Saved words
-  hooks/useWordAudio.js     Pronunciation player (expo-audio)
+    HistoryContext.js       Search history (persisted)
+    BookmarksContext.js     Saved words (persisted)
+  hooks/
+    useWordAudio.js         Pronunciation transport + progress (expo-audio)
+    usePersistentState.js   AsyncStorage-backed state (hydration-safe)
   navigation/
     AppNavigator.js         Drawer › Tabs › Stacks
     DrawerContent.js        Custom drawer (history)
@@ -125,15 +67,15 @@ src/
     SearchScreen.js  WordDetailScreen.js  HistoryScreen.js  SavedScreen.js
   components/
     SearchBar.js  PrimaryButton.js  Loading.js  StatusView.js
-    WordHeader.js  MeaningCard.js  WordListRow.js  TabBarIcon.js
-  theme/index.js            LexiTech design tokens
+    WordHeader.js  AudioPlayer.js  MeaningCard.js  WordListRow.js
+    TabBarIcon.js  Icons.js
+  theme/index.js            Design tokens (#007aff, Inter-scale)
 ```
 
-> **Note:** This project relies on Expo's default Babel config. Do **not** add a
-> `babel.config.js` with `presets: ['babel-preset-expo']` — in this install
-> `babel-preset-expo` is nested under `expo/node_modules` and isn't resolvable from the
-> project root, which breaks bundling. Expo's transformer applies the preset (and the
-> Reanimated/worklets plugin) automatically.
+> **Note:** Do **not** add a `babel.config.js` with `presets: ['babel-preset-expo']` —
+> in this install `babel-preset-expo` is nested under `expo/node_modules` and isn't
+> resolvable from the project root, which breaks bundling. Expo's transformer applies
+> the preset (and the Reanimated/worklets plugin) automatically.
 
 ---
 
@@ -144,10 +86,13 @@ npm install            # if dependencies aren't installed yet
 npx expo start         # then press 'a' (Android), 'i' (iOS), or scan the QR in Expo Go
 ```
 
-- Android: `npm run android`
-- iOS (macOS): `npm run ios`
+- Android: `npm run android`  ·  iOS (macOS): `npm run ios`
+- Verified on the Android emulator (Expo Go). iOS shares the same JS and is expected
+  to behave identically, but was not run here (no macOS available).
 
-> **Fonts:** The design specifies Inter; the app currently uses the system sans-serif at
-> the same sizes/weights for reliability. Inter can be wired in via
-> `@expo-google-fonts/inter` if pixel-exact type is required.
-```
+## Notes / follow-ups
+
+- The app icon & splash use the placeholder Expo art with LexiTech brand colors —
+  swap `assets/icon.png` for a LexiTech logo for a fully branded build.
+- Fonts use the system sans-serif at the design's exact scale; Inter can be wired in
+  via `@expo-google-fonts/inter` for pixel-exact type.

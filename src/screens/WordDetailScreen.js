@@ -122,6 +122,8 @@ export default function WordDetailScreen({ route, navigation }) {
       <WordHeader
         word={capitalize(data.word)}
         phonetic={data.phoneticText}
+        hasAudio={audio.hasAudio}
+        onPressSpeaker={() => audio.play()}
         isBookmarked={bookmarked}
         onToggleBookmark={() => toggleBookmark(data.word, summarize(data))}
       />
