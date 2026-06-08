@@ -1,22 +1,40 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, radii, spacing, typography } from '../theme';
-import { InfoIcon, SadFaceIcon, WifiOffIcon, ErrorIcon, WarningIcon } from './Icons';
+import {
+  InfoIcon,
+  SadFaceIcon,
+  WifiOffIcon,
+  ErrorIcon,
+  WarningIcon,
+  HistoryIcon,
+  BookmarkIcon,
+  SearchIcon,
+} from './Icons';
 import PrimaryButton from './PrimaryButton';
 
-// Helper to render status icon based on name
+// Helper to render status icon based on name.
 function StatusIcon({ name, color, size = 40 }) {
   switch (name) {
-    case 'info-outline':
-      return <InfoIcon size={size} color={color} />;
     case 'sentiment-dissatisfied':
       return <SadFaceIcon size={size} color={color} />;
     case 'wifi-off':
+    case 'cloud-off':
       return <WifiOffIcon size={size} color={color} />;
     case 'error-outline':
       return <ErrorIcon size={size} color={color} />;
     case 'warning-amber':
+    case 'bug-report':
       return <WarningIcon size={size} color={color} />;
+    case 'schedule':
+    case 'history':
+      return <HistoryIcon size={size} color={color} />;
+    case 'bookmark':
+    case 'bookmark-border':
+      return <BookmarkIcon size={size} color={color} filled={false} />;
+    case 'search':
+      return <SearchIcon size={size} color={color} />;
+    case 'info-outline':
     default:
       return <InfoIcon size={size} color={color} />;
   }

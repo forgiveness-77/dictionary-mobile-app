@@ -5,7 +5,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import WordListRow from '../components/WordListRow';
 import StatusView from '../components/StatusView';
 import { useBookmarks } from '../context/BookmarksContext';
+import { capitalize } from '../utils/validation';
 import { colors, spacing, typography } from '../theme';
+
+function describe(item) {
+  if (!item.gloss) return null;
+  return item.partOfSpeech ? `${item.partOfSpeech} · ${item.gloss}` : item.gloss;
+}
 
 export default function SavedScreen({ navigation }) {
   const { bookmarks, removeBookmark, clearBookmarks } = useBookmarks();
@@ -26,9 +32,7 @@ export default function SavedScreen({ navigation }) {
   return (
     <View style={styles.screen}>
       <View style={styles.headerRow}>
-        <Text style={styles.count}>
-          {bookmarks.length} saved
-        </Text>
+        <Text style={styles.count}>{bookmarks.length} saved</Text>
         <Pressable onPress={clearBookmarks} hitSlop={8} accessibilityLabel="Clear all saved words">
           <Text style={styles.clear}>Clear all</Text>
         </Pressable>
@@ -36,14 +40,15 @@ export default function SavedScreen({ navigation }) {
 
       <FlatList
         data={bookmarks}
-        keyExtractor={(item) => item}
+        keyExtractor={(item) => item.word}
         contentContainerStyle={{ padding: spacing.sm, paddingBottom: insets.bottom + spacing.xxl }}
         renderItem={({ item }) => (
           <WordListRow
-            word={item}
+            word={capitalize(item.word)}
+            description={describe(item)}
             leadingIcon="bookmark"
-            onPress={() => navigation.navigate('WordDetail', { word: item })}
-            onRemove={() => removeBookmark(item)}
+            onPress={() => navigation.navigate('WordDetail', { word: item.word })}
+            onRemove={() => removeBookmark(item.word)}
           />
         )}
       />

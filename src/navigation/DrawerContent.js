@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import WordListRow from '../components/WordListRow';
 import { CloseIcon, HistoryIcon, DeleteIcon } from '../components/Icons';
 import { useHistory } from '../context/HistoryContext';
+import { capitalize } from '../utils/validation';
 import { colors, radii, spacing, typography } from '../theme';
 
 // Custom drawer: brand + search history + clear action (Activity 4).
@@ -52,10 +53,14 @@ export default function DrawerContent({ navigation }) {
         <FlatList
           style={styles.list}
           data={history}
-          keyExtractor={(item) => item}
+          keyExtractor={(item) => item.word}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <WordListRow word={item} leadingIcon="schedule" onPress={() => openWord(item)} />
+            <WordListRow
+              word={capitalize(item.word)}
+              leadingIcon="schedule"
+              onPress={() => openWord(item.word)}
+            />
           )}
         />
       )}

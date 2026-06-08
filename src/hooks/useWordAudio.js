@@ -1,12 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from 'expo-audio';
 
-// Owns a single audio player and exposes full playback controls for a word's
-// pronunciations. Picks a preferred accent (US > UK > first) by default and
-// lets the caller switch/play/pause/stop any available accent. Errors are reported via
+// Owns a single audio player and exposes full transport controls + progress for
+// a word's pronunciations. Picks a preferred accent (US > UK > first) and lets
+// the caller play/pause/stop/seek and switch accents. Errors are reported via
 // `onError` rather than thrown so the screen never crashes (Activity 3).
 export function useWordAudio(audios = [], onError) {
-  const player = useAudioPlayer();
+  // ~10 status updates/sec for a smooth progress bar.
+  const player = useAudioPlayer(null, { updateInterval: 100 });
   const status = useAudioPlayerStatus(player);
 
   const preferredIndex = useMemo(() => {
@@ -20,17 +21,35 @@ export function useWordAudio(audios = [], onError) {
 
   const [activeIndex, setActiveIndex] = useState(preferredIndex);
   const [loadingIndex, setLoadingIndex] = useState(-1);
-  const [isPaused, setIsPaused] = useState(false);
+  const loadedIndexRef = useRef(-1); // which audio is currently loaded in the player
 
-  useEffect(() => setActiveIndex(preferredIndex), [preferredIndex]);
+  // Reset when the word (and therefore its audios) changes.
+  useEffect(() => {
+    setActiveIndex(preferredIndex);
+    loadedIndexRef.current = -1;
+  }, [preferredIndex]);
 
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
   }, []);
 
+  // Clear the buffering spinner once the source has loaded.
   useEffect(() => {
     if (status?.isLoaded && loadingIndex >= 0) setLoadingIndex(-1);
   }, [status?.isLoaded, loadingIndex]);
+
+  // When playback finishes, rewind so the progress bar resets and the next
+  // tap plays from the start.
+  useEffect(() => {
+    if (status?.didJustFinish) {
+      try {
+        player.pause();
+        player.seekTo(0);
+      } catch (e) {
+        /* no-op */
+      }
+    }
+  }, [status?.didJustFinish, player]);
 
   const play = useCallback(
     (index) => {
@@ -39,9 +58,11 @@ export function useWordAudio(audios = [], onError) {
       if (!audio) return;
       try {
         setActiveIndex(i);
-        setLoadingIndex(i);
-        setIsPaused(false);
-        player.replace({ uri: audio.url });
+        if (loadedIndexRef.current !== i) {
+          setLoadingIndex(i);
+          player.replace({ uri: audio.url });
+          loadedIndexRef.current = i;
+        }
         player.seekTo(0);
         player.play();
       } catch (e) {
@@ -55,55 +76,72 @@ export function useWordAudio(audios = [], onError) {
   const pause = useCallback(() => {
     try {
       player.pause();
-      setIsPaused(true);
     } catch (e) {
-      onError?.('Could not pause the pronunciation.');
+      /* no-op */
     }
-  }, [player, onError]);
+  }, [player]);
 
   const resume = useCallback(() => {
+    // Nothing loaded yet → start the active accent from the beginning.
+    if (loadedIndexRef.current < 0) {
+      play(activeIndex);
+      return;
+    }
     try {
       player.play();
-      setIsPaused(false);
     } catch (e) {
-      onError?.('Could not resume the pronunciation.');
+      onError?.('Could not play the pronunciation. Please try again.');
     }
-  }, [player, onError]);
+  }, [player, activeIndex, play, onError]);
+
+  const togglePlay = useCallback(() => {
+    if (status?.playing) pause();
+    else resume();
+  }, [status?.playing, pause, resume]);
 
   const stop = useCallback(() => {
     try {
       player.pause();
       player.seekTo(0);
-      setIsPaused(false);
     } catch (e) {
-      onError?.('Could not stop the pronunciation.');
+      /* no-op */
     }
-  }, [player, onError]);
+  }, [player]);
 
-  const togglePlay = useCallback(() => {
-    if (status?.playing) {
-      pause();
-    } else if (isPaused) {
-      resume();
-    } else {
-      play();
-    }
-  }, [status?.playing, isPaused, play, pause, resume]);
+  const seekToRatio = useCallback(
+    (ratio) => {
+      const d = status?.duration || 0;
+      if (d > 0) {
+        const clamped = Math.max(0, Math.min(1, ratio));
+        try {
+          player.seekTo(clamped * d);
+        } catch (e) {
+          /* no-op */
+        }
+      }
+    },
+    [player, status?.duration]
+  );
+
+  const duration = status?.duration || 0;
+  const position = duration > 0 ? Math.min(status?.currentTime || 0, duration) : 0;
+  const progress = duration > 0 ? Math.min(1, Math.max(0, position / duration)) : 0;
 
   return {
     hasAudio: audios.length > 0,
     audios,
     activeIndex,
-    loadingIndex,
     play,
     pause,
     resume,
-    stop,
     togglePlay,
+    stop,
+    seekToRatio,
     isPlaying: !!status?.playing,
-    isPaused,
-    isLoading: loadingIndex >= 0,
-    duration: status?.durationMillis || 0,
-    position: status?.currentPositionMillis || 0,
+    isLoading: loadingIndex >= 0 && !status?.isLoaded,
+    isLoaded: !!status?.isLoaded,
+    position,
+    duration,
+    progress,
   };
 }

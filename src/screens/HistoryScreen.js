@@ -5,7 +5,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import WordListRow from '../components/WordListRow';
 import StatusView from '../components/StatusView';
 import { useHistory } from '../context/HistoryContext';
+import { capitalize } from '../utils/validation';
 import { colors, spacing, typography } from '../theme';
+
+function describe(item) {
+  if (!item.gloss) return null;
+  return item.partOfSpeech ? `${item.partOfSpeech} · ${item.gloss}` : item.gloss;
+}
 
 export default function HistoryScreen({ navigation }) {
   const { history, removeFromHistory, clearHistory } = useHistory();
@@ -36,14 +42,15 @@ export default function HistoryScreen({ navigation }) {
 
       <FlatList
         data={history}
-        keyExtractor={(item) => item}
+        keyExtractor={(item) => item.word}
         contentContainerStyle={{ padding: spacing.sm, paddingBottom: insets.bottom + spacing.xxl }}
         renderItem={({ item }) => (
           <WordListRow
-            word={item}
+            word={capitalize(item.word)}
+            description={describe(item)}
             leadingIcon="schedule"
-            onPress={() => navigation.navigate('WordDetail', { word: item })}
-            onRemove={() => removeFromHistory(item)}
+            onPress={() => navigation.navigate('WordDetail', { word: item.word })}
+            onRemove={() => removeFromHistory(item.word)}
           />
         )}
       />

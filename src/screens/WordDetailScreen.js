@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import WordHeader from '../components/WordHeader';
+import AudioPlayer from '../components/AudioPlayer';
 import MeaningCard from '../components/MeaningCard';
 import Loading from '../components/Loading';
 import StatusView from '../components/StatusView';
@@ -23,6 +24,15 @@ const ERROR_PRESENTATION = {
   [ErrorType.UNKNOWN]: { icon: 'error-outline', title: 'Something went wrong', tone: 'error' },
 };
 
+// Short summary used for the history/saved subtitle.
+function summarize(result) {
+  const meaning = result?.meanings?.[0];
+  return {
+    gloss: meaning?.definitions?.[0]?.definition || '',
+    partOfSpeech: meaning?.partOfSpeech || '',
+  };
+}
+
 export default function WordDetailScreen({ route, navigation }) {
   const initialWord = route.params?.word || '';
   const [data, setData] = useState(null);
@@ -42,7 +52,7 @@ export default function WordDetailScreen({ route, navigation }) {
       try {
         const result = await getWordData(word);
         setData(result);
-        addToHistory(result.word || word);
+        addToHistory(result.word || word, summarize(result));
       } catch (e) {
         setData(null);
         setError({ type: e?.type || ErrorType.UNKNOWN, message: e?.message });
@@ -112,10 +122,11 @@ export default function WordDetailScreen({ route, navigation }) {
       <WordHeader
         word={capitalize(data.word)}
         phonetic={data.phoneticText}
-        audio={audio}
         isBookmarked={bookmarked}
-        onToggleBookmark={() => toggleBookmark(data.word)}
+        onToggleBookmark={() => toggleBookmark(data.word, summarize(data))}
       />
+
+      <AudioPlayer audio={audio} />
 
       {audioError ? (
         <View style={styles.audioBanner}>
