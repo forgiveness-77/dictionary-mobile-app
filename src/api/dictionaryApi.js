@@ -29,12 +29,12 @@ export class DictionaryError extends Error {
   }
 }
 
+const ACCENT_LABELS = { us: 'US', uk: 'UK', au: 'AU', ca: 'CA', in: 'IN', nz: 'NZ', za: 'ZA' };
+
 function deriveAccent(url = '') {
-  const u = String(url).toLowerCase();
-  if (u.includes('-us.')) return 'US';
-  if (u.includes('-uk.')) return 'UK';
-  if (u.includes('-au.')) return 'AU';
-  return '';
+  // Free Dictionary audio files end with a region code, e.g. "word-us.mp3".
+  const match = String(url).toLowerCase().match(/-([a-z]{2})\.mp3(?:[?#].*)?$/);
+  return match && ACCENT_LABELS[match[1]] ? ACCENT_LABELS[match[1]] : '';
 }
 
 // The API can return inconsistent shapes (missing fields, multiple entries,

@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, radii, spacing, typography } from '../theme';
 import {
   InfoIcon,
   SadFaceIcon,
@@ -12,6 +11,7 @@ import {
   SearchIcon,
 } from './Icons';
 import PrimaryButton from './PrimaryButton';
+import { spacing, radii, useTheme } from '../theme';
 
 // Helper to render status icon based on name.
 function StatusIcon({ name, color, size = 40 }) {
@@ -51,6 +51,9 @@ export default function StatusView({
   onAction,
   style,
 }) {
+  const { colors, typography } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, typography), [colors, typography]);
+
   const tint = {
     neutral: { bg: colors.surfaceLow, fg: colors.outline },
     error: { bg: colors.errorContainer, fg: colors.error },
@@ -71,17 +74,18 @@ export default function StatusView({
   );
 }
 
-const styles = StyleSheet.create({
-  container: { alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
-  iconCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: radii.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  title: { ...typography.headlineLgMobile, textAlign: 'center', marginBottom: spacing.sm },
-  message: { ...typography.bodyMd, color: colors.onSurfaceVariant, textAlign: 'center', maxWidth: 320 },
-  action: { marginTop: spacing.xl, alignSelf: 'stretch', minWidth: 200 },
-});
+const makeStyles = (colors, typography) =>
+  StyleSheet.create({
+    container: { alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
+    iconCircle: {
+      width: 88,
+      height: 88,
+      borderRadius: radii.pill,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.lg,
+    },
+    title: { ...typography.headlineLgMobile, textAlign: 'center', marginBottom: spacing.sm },
+    message: { ...typography.bodyMd, color: colors.onSurfaceVariant, textAlign: 'center', maxWidth: 320 },
+    action: { marginTop: spacing.xl, alignSelf: 'stretch', minWidth: 200 },
+  });

@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { SearchIcon, HistoryIcon, BookmarkIcon } from './Icons';
-import { colors, radii, spacing } from '../theme';
+import { spacing, radii, useTheme } from '../theme';
 
 // Bottom-tab icon with a clear active "pill" highlight behind the focused tab.
 export default function TabBarIcon({ name, focused }) {
+  const { colors } = useTheme();
   const iconColor = focused ? colors.primary : colors.onSurfaceVariant;
 
   const getIcon = () => {
@@ -20,7 +21,7 @@ export default function TabBarIcon({ name, focused }) {
     }
   };
 
-  return <View style={[styles.wrap, focused && styles.wrapActive]}>{getIcon()}</View>;
+  return <View style={[styles.wrap, focused && { backgroundColor: colors.primarySoft }]}>{getIcon()}</View>;
 }
 
 const styles = StyleSheet.create({
@@ -32,5 +33,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: radii.pill,
   },
-  wrapActive: { backgroundColor: 'rgba(0,122,255,0.14)' },
 });

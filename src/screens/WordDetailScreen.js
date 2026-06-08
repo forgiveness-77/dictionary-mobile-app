@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -13,7 +13,7 @@ import { capitalize } from '../utils/validation';
 import { useHistory } from '../context/HistoryContext';
 import { useBookmarks } from '../context/BookmarksContext';
 import { useWordAudio } from '../hooks/useWordAudio';
-import { colors, radii, spacing, typography } from '../theme';
+import { spacing, radii, useTheme } from '../theme';
 
 const ERROR_PRESENTATION = {
   [ErrorType.NOT_FOUND]: { icon: 'sentiment-dissatisfied', title: 'Word not found', tone: 'neutral' },
@@ -24,7 +24,6 @@ const ERROR_PRESENTATION = {
   [ErrorType.UNKNOWN]: { icon: 'error-outline', title: 'Something went wrong', tone: 'error' },
 };
 
-// Short summary used for the history/saved subtitle.
 function summarize(result) {
   const meaning = result?.meanings?.[0];
   return {
@@ -43,6 +42,8 @@ export default function WordDetailScreen({ route, navigation }) {
   const { addToHistory } = useHistory();
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const audio = useWordAudio(data?.audios || [], setAudioError);
+  const { colors, typography } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, typography), [colors, typography]);
 
   const load = useCallback(
     async (word) => {
@@ -67,7 +68,6 @@ export default function WordDetailScreen({ route, navigation }) {
     if (initialWord) load(initialWord);
   }, [initialWord, load]);
 
-  // Keep the header title in sync with the word being shown.
   useEffect(() => {
     navigation.setOptions({ title: capitalize(data?.word || initialWord || 'Definition') });
   }, [data, initialWord, navigation]);
@@ -152,18 +152,19 @@ export default function WordDetailScreen({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
-  centered: { flex: 1, justifyContent: 'center' },
-  content: { padding: spacing.lg },
-  audioBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: colors.errorContainer,
-    borderRadius: radii.sm,
-    padding: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  audioBannerText: { ...typography.bodySm, color: colors.onErrorContainer, flex: 1 },
-});
+const makeStyles = (colors, typography) =>
+  StyleSheet.create({
+    screen: { flex: 1, backgroundColor: colors.background },
+    centered: { flex: 1, justifyContent: 'center' },
+    content: { padding: spacing.lg },
+    audioBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      backgroundColor: colors.errorContainer,
+      borderRadius: radii.sm,
+      padding: spacing.sm,
+      marginBottom: spacing.lg,
+    },
+    audioBannerText: { ...typography.bodySm, color: colors.onErrorContainer, flex: 1 },
+  });

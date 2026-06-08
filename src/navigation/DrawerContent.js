@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -6,14 +6,15 @@ import WordListRow from '../components/WordListRow';
 import { CloseIcon, HistoryIcon, DeleteIcon } from '../components/Icons';
 import { useHistory } from '../context/HistoryContext';
 import { capitalize } from '../utils/validation';
-import { colors, radii, spacing, typography } from '../theme';
+import { spacing, radii, useTheme } from '../theme';
 
 // Custom drawer: brand + search history + clear action (Activity 4).
 export default function DrawerContent({ navigation }) {
   const { history, clearHistory } = useHistory();
   const insets = useSafeAreaInsets();
+  const { colors, typography } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, typography), [colors, typography]);
 
-  // Open a word from history into the Search tab's detail screen.
   const openWord = (word) => {
     navigation.closeDrawer();
     navigation.navigate('Main', {
@@ -84,50 +85,51 @@ export default function DrawerContent({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface, paddingHorizontal: spacing.sm },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  brand: { ...typography.headlineLgMobile, color: colors.primary, fontWeight: '700' },
-  closeBtn: { padding: spacing.xs, borderRadius: radii.pill },
-  sectionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  sectionTitle: {
-    ...typography.labelLg,
-    color: colors.onSurface,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  list: { flex: 1 },
-  empty: { flex: 1, alignItems: 'center', paddingTop: spacing.xxl, paddingHorizontal: spacing.lg },
-  emptyText: { ...typography.bodySm, color: colors.onSurfaceVariant, textAlign: 'center', marginTop: spacing.md },
-  footer: { borderTopWidth: 1, borderTopColor: colors.outlineVariant, paddingTop: spacing.sm, marginTop: spacing.sm },
-  clearBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderRadius: radii.md,
-  },
-  clearPressed: { backgroundColor: colors.errorContainer },
-  clearText: { ...typography.bodyMd, color: colors.error, fontWeight: '500' },
-  version: {
-    ...typography.labelMd,
-    color: colors.outline,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-    letterSpacing: 2,
-    paddingVertical: spacing.lg,
-  },
-});
+const makeStyles = (colors, typography) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.surface, paddingHorizontal: spacing.sm },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.md,
+      marginBottom: spacing.lg,
+    },
+    brand: { ...typography.headlineLgMobile, color: colors.primary, fontWeight: '700' },
+    closeBtn: { padding: spacing.xs, borderRadius: radii.pill },
+    sectionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingHorizontal: spacing.md,
+      marginBottom: spacing.sm,
+    },
+    sectionTitle: {
+      ...typography.labelLg,
+      color: colors.onSurface,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    list: { flex: 1 },
+    empty: { flex: 1, alignItems: 'center', paddingTop: spacing.xxl, paddingHorizontal: spacing.lg },
+    emptyText: { ...typography.bodySm, color: colors.onSurfaceVariant, textAlign: 'center', marginTop: spacing.md },
+    footer: { borderTopWidth: 1, borderTopColor: colors.outlineVariant, paddingTop: spacing.sm, marginTop: spacing.sm },
+    clearBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.md,
+      borderRadius: radii.md,
+    },
+    clearPressed: { backgroundColor: colors.errorContainer },
+    clearText: { ...typography.bodyMd, color: colors.error, fontWeight: '500' },
+    version: {
+      ...typography.labelMd,
+      color: colors.outline,
+      textAlign: 'center',
+      textTransform: 'uppercase',
+      letterSpacing: 2,
+      paddingVertical: spacing.lg,
+    },
+  });

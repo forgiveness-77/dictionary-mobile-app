@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, radii, shadow, spacing, typography } from '../theme';
+import { spacing, radii, shadow, useTheme } from '../theme';
 
 function unique(list) {
   return Array.from(new Set(list.filter(Boolean)));
 }
 
-function ChipGroup({ label, items }) {
+function ChipGroup({ label, items, styles }) {
   if (!items.length) return null;
   return (
     <View style={styles.chipGroup}>
@@ -22,9 +22,12 @@ function ChipGroup({ label, items }) {
   );
 }
 
-// One card per part of speech (LexiTech card-ds with a primary top border):
-// badge, numbered definitions, example boxes, and synonym/antonym chips.
+// One card per part of speech: badge, numbered definitions, example boxes, and
+// synonym/antonym chips.
 export default function MeaningCard({ meaning }) {
+  const { colors, typography } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, typography), [colors, typography]);
+
   const { partOfSpeech, definitions } = meaning;
   const synonyms = unique([...meaning.synonyms, ...definitions.flatMap((d) => d.synonyms)]);
   const antonyms = unique([...meaning.antonyms, ...definitions.flatMap((d) => d.antonyms)]);
@@ -49,67 +52,70 @@ export default function MeaningCard({ meaning }) {
         </View>
       ))}
 
-      <ChipGroup label="Synonyms" items={synonyms} />
-      <ChipGroup label="Antonyms" items={antonyms} />
+      <ChipGroup label="Synonyms" items={synonyms} styles={styles} />
+      <ChipGroup label="Antonyms" items={antonyms} styles={styles} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surfaceLowest,
-    borderRadius: radii.sm,
-    borderTopWidth: 4,
-    borderTopColor: colors.primary,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    ...shadow.card,
-  },
-  badgeRow: { flexDirection: 'row', marginBottom: spacing.md },
-  badge: {
-    ...typography.labelLg,
-    color: colors.primary,
-    textTransform: 'uppercase',
-    backgroundColor: colors.primarySoft,
-    paddingVertical: 2,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radii.sm,
-    overflow: 'hidden',
-  },
-  definition: {},
-  definitionDivider: {
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.surfaceHigh,
-  },
-  definitionText: { ...typography.bodyXl },
-  index: { color: colors.outline, fontWeight: '700' },
-  example: {
-    marginTop: spacing.md,
-    backgroundColor: colors.surfaceLow,
-    borderRadius: radii.sm,
-    borderLeftWidth: 2,
-    borderLeftColor: colors.primarySoftBorder,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  exampleText: { ...typography.bodyMd, color: colors.onSurfaceVariant, fontStyle: 'italic' },
-  chipGroup: { marginTop: spacing.lg },
-  chipLabel: {
-    ...typography.labelLg,
-    color: colors.onSurfaceVariant,
-    textTransform: 'uppercase',
-    marginBottom: spacing.sm,
-  },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  chip: {
-    backgroundColor: colors.surfaceHigh,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    borderRadius: radii.pill,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-  },
-  chipText: { ...typography.labelMd, color: colors.onSurfaceVariant },
-});
+const makeStyles = (colors, typography) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.surfaceLowest,
+      borderRadius: radii.sm,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.outlineVariant,
+      borderTopWidth: 4,
+      borderTopColor: colors.primary,
+      padding: spacing.lg,
+      marginBottom: spacing.lg,
+      ...shadow.card,
+    },
+    badgeRow: { flexDirection: 'row', marginBottom: spacing.md },
+    badge: {
+      ...typography.labelLg,
+      color: colors.primary,
+      textTransform: 'uppercase',
+      backgroundColor: colors.primarySoft,
+      paddingVertical: 2,
+      paddingHorizontal: spacing.sm,
+      borderRadius: radii.sm,
+      overflow: 'hidden',
+    },
+    definition: {},
+    definitionDivider: {
+      marginTop: spacing.md,
+      paddingTop: spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: colors.surfaceHigh,
+    },
+    definitionText: { ...typography.bodyXl },
+    index: { color: colors.outline, fontWeight: '700' },
+    example: {
+      marginTop: spacing.md,
+      backgroundColor: colors.surfaceLow,
+      borderRadius: radii.sm,
+      borderLeftWidth: 2,
+      borderLeftColor: colors.primarySoftBorder,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+    },
+    exampleText: { ...typography.bodyMd, color: colors.onSurfaceVariant, fontStyle: 'italic' },
+    chipGroup: { marginTop: spacing.lg },
+    chipLabel: {
+      ...typography.labelLg,
+      color: colors.onSurfaceVariant,
+      textTransform: 'uppercase',
+      marginBottom: spacing.sm,
+    },
+    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    chip: {
+      backgroundColor: colors.surfaceHigh,
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+      borderRadius: radii.pill,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.md,
+    },
+    chipText: { ...typography.labelMd, color: colors.onSurfaceVariant },
+  });
