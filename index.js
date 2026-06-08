@@ -1,3 +1,5 @@
+// Must be imported first for react-native-gesture-handler / drawer navigation.
+import 'react-native-gesture-handler';
 import { registerRootComponent } from 'expo';
 
 import App from './App';

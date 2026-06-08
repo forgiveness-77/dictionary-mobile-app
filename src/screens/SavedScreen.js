@@ -1,0 +1,67 @@
+import React from 'react';
+import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import WordListRow from '../components/WordListRow';
+import StatusView from '../components/StatusView';
+import { useBookmarks } from '../context/BookmarksContext';
+import { colors, spacing, typography } from '../theme';
+
+export default function SavedScreen({ navigation }) {
+  const { bookmarks, removeBookmark, clearBookmarks } = useBookmarks();
+  const insets = useSafeAreaInsets();
+
+  if (bookmarks.length === 0) {
+    return (
+      <View style={styles.screenCentered}>
+        <StatusView
+          icon="bookmark-border"
+          title="No saved words"
+          message="Tap the bookmark icon on any word to save it here."
+        />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.screen}>
+      <View style={styles.headerRow}>
+        <Text style={styles.count}>
+          {bookmarks.length} saved
+        </Text>
+        <Pressable onPress={clearBookmarks} hitSlop={8} accessibilityLabel="Clear all saved words">
+          <Text style={styles.clear}>Clear all</Text>
+        </Pressable>
+      </View>
+
+      <FlatList
+        data={bookmarks}
+        keyExtractor={(item) => item}
+        contentContainerStyle={{ padding: spacing.sm, paddingBottom: insets.bottom + spacing.xxl }}
+        renderItem={({ item }) => (
+          <WordListRow
+            word={item}
+            leadingIcon="bookmark"
+            onPress={() => navigation.navigate('WordDetail', { word: item })}
+            onRemove={() => removeBookmark(item)}
+          />
+        )}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
+  screenCentered: { flex: 1, backgroundColor: colors.background, justifyContent: 'center' },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
+  },
+  count: { ...typography.labelLg, color: colors.onSurfaceVariant, textTransform: 'uppercase' },
+  clear: { ...typography.bodySm, color: colors.primary, fontWeight: '600' },
+});
